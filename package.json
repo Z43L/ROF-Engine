@@ -1,47 +1,95 @@
 {
-  "name": "reinado-olvidado",
-  "version": "0.1.0",
-  "description": "Framework completo para desarrollo de videojuegos 3D en React, React Native y Expo",
-  "main": "src/index.js",
+  "name": "rof-engine",
+  "version": "1.0.0",
+  "description": "Complete 3D game engine framework for React, React Native and Expo with ECS architecture, physics, post-processing and professional UI system",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./react": {
+      "import": "./dist/react/index.js",
+      "require": "./dist/react/index.cjs",
+      "types": "./dist/react/index.d.ts"
+    },
+    "./components": {
+      "import": "./dist/components/index.js",
+      "require": "./dist/components/index.cjs",
+      "types": "./dist/components/index.d.ts"
+    },
+    "./systems": {
+      "import": "./dist/systems/index.js",
+      "require": "./dist/systems/index.cjs",
+      "types": "./dist/systems/index.d.ts"
+    },
+    "./cinematic": {
+      "import": "./dist/cinematic/index.js",
+      "require": "./dist/cinematic/index.cjs",
+      "types": "./dist/cinematic/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web",
+    "build": "rollup -c",
+    "build:watch": "rollup -c -w",
+    "dev": "rollup -c -w",
     "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "lint": "eslint src/",
-    "build:web": "expo export:web",
-    "build:native": "expo prebuild"
+    "lint:fix": "eslint src/ --fix",
+    "prepublishOnly": "npm run build && npm test",
+    "prepack": "npm run build"
   },
   "dependencies": {
-    "@react-three/drei": "^10.7.6",
-    "@react-three/fiber": "^9.3.0",
-    "@react-three/postprocessing": "^2.16.0",
-    "expo": "~54.0.13",
-    "expo-status-bar": "~3.0.8",
-    "expo-three": "^8.0.0",
-    "expo-gl": "~15.0.4",
-    "expo-asset": "~11.0.1",
-    "expo-av": "~15.0.1",
-    "expo-haptics": "~14.0.0",
-    "react": "19.1.0",
-    "react-native": "0.81.4",
-    "react-native-reanimated": "~3.16.5",
-    "react-native-gesture-handler": "~2.20.2",
-    "three": "^0.166.0",
+    "three": "^0.160.0",
     "zustand": "^5.0.3"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.25.0",
-    "@types/three": "^0.166.0",
-    "eslint": "^9.15.0",
-    "jest": "^29.7.0",
-    "prettier": "^3.4.2"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
     "react-native": ">=0.70.0",
     "three": ">=0.160.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-native": {
+      "optional": true
+    },
+    "three": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.3",
+    "@rollup/plugin-typescript": "^11.1.5",
+    "@types/react": "^18.2.45",
+    "@types/react-native": "^0.72.7",
+    "@types/three": "^0.166.0",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "postprocessing": "^6.33.3",
+    "prettier": "^3.1.1",
+    "rollup": "^4.9.1",
+    "rollup-plugin-dts": "^6.1.0",
+    "rollup-plugin-peer-deps-external": "^2.2.4",
+    "typescript": "^5.3.3"
   },
   "keywords": [
     "game-engine",

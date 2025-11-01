@@ -1,15 +1,30 @@
 /**
- * Reinado Olvidado Framework
- * Framework completo para desarrollo de videojuegos 3D
- * Compatible con React Web, React Native y Expo
+ * ROF-Engine (Reinado Olvidado Framework)
+ * Complete 3D Game Engine Framework for React, React Native & Expo
+ *
+ * @version 1.0.0
+ * @author ReinadoOlvidado Team
+ * @license MIT
  */
 
 // Core Engine
 export * from './core/index.js';
 
+// Game Engine (Alternative)
+export { GameEngine, useGameEngine } from './engine/GameEngine.js';
+
 // Systems
 export { default as InputSystem } from './systems/InputSystem.js';
-export { default as AudioSystem, AudioCategory } from './systems/AudioSystem.js';
+export { default as AudioSystem, AudioCategory, SoundInstance } from './systems/AudioSystem.js';
+export { default as PhysicsSystem } from './systems/PhysicsSystem.js';
+export { default as UISystem } from './systems/UISystem.js';
+export { default as RenderSystem } from './systems/RenderSystem.js';
+export { default as MeshSystem } from './systems/MeshSystem.js';
+export { default as LightSystem } from './systems/LightSystem.js';
+export { default as AssetSystem } from './systems/AssetSystem.js';
+export { default as CameraSystem } from './systems/CameraSystem.js';
+export { default as SkyboxSystem } from './systems/SkyboxSystem.js';
+export { default as DebugSystem } from './systems/DebugSystem.js';
 
 // Utils
 export { default as Platform } from './utils/Platform.js';
@@ -19,8 +34,30 @@ export { ObjectPool, PoolManager } from './utils/Pool.js';
 // Components Registry
 export { ComponentRegistry } from './core/Component.js';
 
-// Cinematic System (existente)
+// UI Components
+export * as UIComponents from './components/ui/UIComponent.js';
+export { default as Scene3D } from './components/Scene3D.js';
+export { default as Camera3D } from './components/Camera3D.js';
+export { default as Ground } from './components/Ground.js';
+export { default as MeshComponent } from './components/3d/Mesh.js';
+export { default as LightComponent } from './components/3d/Light.js';
+
+// Cinematic System
 export * from './cinematic/index.js';
+
+// React Integration
+export * from './react/Game.js';
+export * from './react/RenderSystem.js';
+export * from './react/UISystem.js';
+export * from './react/LightComponent.js';
+export * from './react/MeshComponent.js';
+
+// Adapters
+export { default as WebInputAdapter } from './adapters/web/WebInputAdapter.js';
+export { default as WebAudioAdapter } from './adapters/web/WebAudioAdapter.js';
+export { default as ExpoInputAdapter } from './adapters/expo/ExpoInputAdapter.js';
+export { default as ExpoAudioAdapter } from './adapters/expo/ExpoAudioAdapter.js';
+export { default as NativeInputAdapter } from './adapters/native/NativeInputAdapter.js';
 
 /**
  * Factory para crear un Engine configurado automáticamente según la plataforma
@@ -64,6 +101,7 @@ export async function createEngine(config = {}) {
     includeInput = true,
     includeAudio = true,
     includePhysics = false,
+    includeDebug = false,
     ...engineConfig
   } = config;
 
@@ -83,11 +121,39 @@ export async function createEngine(config = {}) {
     engine.registerSystem(audioSystem);
   }
 
-  // TODO: Registrar sistema de física si se solicita
-  // if (includePhysics) {
-  //   const physicsSystem = new PhysicsSystem();
-  //   engine.registerSystem(physicsSystem);
-  // }
+  // Registrar sistema de renderizado
+  const renderSystem = new RenderSystem();
+  engine.registerSystem(renderSystem);
+
+  // Registrar sistema de mallas
+  const meshSystem = new MeshSystem();
+  engine.registerSystem(meshSystem);
+
+  // Registrar sistema de luces
+  const lightSystem = new LightSystem();
+  engine.registerSystem(lightSystem);
+
+  // Registrar sistema de cámara
+  const cameraSystem = new CameraSystem();
+  engine.registerSystem(cameraSystem);
+
+  // Registrar sistema de skybox
+  const skyboxSystem = new SkyboxSystem();
+  engine.registerSystem(skyboxSystem);
+
+  // Registrar sistema de debug (deshabilitado por defecto)
+  if (config.includeDebug) {
+    const debugSystem = new DebugSystem();
+    debugSystem.setEnabled(true);
+    debugSystem.setVisible(false);
+    engine.registerSystem(debugSystem);
+  }
+
+  // Registrar sistema de física si se solicita
+  if (includePhysics) {
+    const physicsSystem = new PhysicsSystem();
+    engine.registerSystem(physicsSystem);
+  }
 
   return engine;
 }
@@ -95,8 +161,8 @@ export async function createEngine(config = {}) {
 /**
  * Información sobre el framework
  */
-export const VERSION = '0.1.0';
-export const FRAMEWORK_NAME = 'Reinado Olvidado';
+export const VERSION = '1.0.0';
+export const FRAMEWORK_NAME = 'ROF-Engine (Reinado Olvidado Framework)';
 
 /**
  * Información de plataforma actual
