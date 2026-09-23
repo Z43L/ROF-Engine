@@ -32,7 +32,7 @@ export { default as EventEmitter } from './utils/EventEmitter.js';
 export { ObjectPool, PoolManager } from './utils/Pool.js';
 
 // Components Registry
-export { ComponentRegistry } from './core/Component.js';
+export { ComponentRegistry, Component } from './core/Component.js';
 
 // UI Components
 export * as UIComponents from './components/ui/UIComponent.js';

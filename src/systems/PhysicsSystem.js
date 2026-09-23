@@ -16,7 +16,7 @@ class PhysicsSystem extends System {
 
     this.worldConfig = {
       gravity: { x: 0, y: -9.81, z: 0 },
-      timestep: '1/60',
+      timestep: 1 / 60,
       enableSleeping: true,
       ...worldConfig
     };
@@ -39,6 +39,9 @@ class PhysicsSystem extends System {
 
       // Inicializar Rapier
       await RAPIER.init();
+
+      // Guardar referencia para uso en el resto de métodos
+      this.RAPIER = RAPIER;
 
       // Crear mundo físico
       this.physicsWorld = new RAPIER.World(this.worldConfig.gravity);
@@ -93,9 +96,7 @@ class PhysicsSystem extends System {
 
     // Configurar posición inicial
     body.setTranslation(
-      transform.x,
-      transform.y,
-      transform.z,
+      { x: transform.x, y: transform.y, z: transform.z },
       true
     );
 
@@ -149,16 +150,15 @@ class PhysicsSystem extends System {
    * Obtiene descripción del rigid body
    */
   _getBodyDescription(config) {
-    const RAPIER = window.RAPIER;
+    const RAPIER = this.RAPIER;
 
-    const bodyType = {
-      'dynamic': RAPIER.RigidBodyType.Dynamic,
-      'fixed': RAPIER.RigidBodyType.Fixed,
-      'kinematic': RAPIER.RigidBodyType.KinematicPositionBased,
-      'kinematicVelocity': RAPIER.RigidBodyType.KinematicVelocityBased
-    }[config.type] || RAPIER.RigidBodyType.Dynamic;
-
-    const desc = RAPIER.RigidBodyDesc.new(bodyType);
+    // Rapier >= 0.14: RigidBodyDesc.new(type) eliminado; usar factories por tipo
+    const desc = {
+      'dynamic': () => RAPIER.RigidBodyDesc.dynamic(),
+      'fixed': () => RAPIER.RigidBodyDesc.fixed(),
+      'kinematic': () => RAPIER.RigidBodyDesc.kinematicPositionBased(),
+      'kinematicVelocity': () => RAPIER.RigidBodyDesc.kinematicVelocityBased()
+    }[config.type]?.() || RAPIER.RigidBodyDesc.dynamic();
 
     // Configurar masa
     if (config.mass) {
@@ -188,28 +188,32 @@ class PhysicsSystem extends System {
    * Obtiene descripción del collider
    */
   _getColliderDescription(config) {
-    const RAPIER = window.RAPIER;
+    const RAPIER = this.RAPIER;
     const { shape, ...shapeConfig } = config;
 
     switch (shape) {
-      case 'box':
+      case 'box': {
         const size = shapeConfig.size || [1, 1, 1];
         return RAPIER.ColliderDesc.cuboid(size[0] / 2, size[1] / 2, size[2] / 2);
 
-      case 'sphere':
+      }
+      case 'sphere': {
         const radius = shapeConfig.radius || 0.5;
         return RAPIER.ColliderDesc.ball(radius);
 
-      case 'cylinder':
+      }
+      case 'cylinder': {
         const cylRadius = shapeConfig.radius || 0.5;
         const cylHeight = shapeConfig.height || 1;
         return RAPIER.ColliderDesc.cylinder(cylHeight / 2, cylRadius);
 
-      case 'capsule':
+      }
+      case 'capsule': {
         const capRadius = shapeConfig.radius || 0.5;
         const capHeight = shapeConfig.height || 1;
         return RAPIER.ColliderDesc.capsule(capHeight / 2, capRadius);
 
+      }
       case 'trimesh':
         if (shapeConfig.vertices && shapeConfig.indices) {
           return RAPIER.ColliderDesc.trimesh(
@@ -272,9 +276,7 @@ class PhysicsSystem extends System {
       // Actualizar kinematic bodies desde transform
       if (type === 'kinematic' || type === 'kinematicVelocity') {
         body.setTranslation(
-          transform.x,
-          transform.y,
-          transform.z,
+          { x: transform.x, y: transform.y, z: transform.z },
           true
         );
         body.setRotation(
@@ -408,7 +410,7 @@ class PhysicsSystem extends System {
   raycast(origin, direction, maxDistance = 100) {
     if (!this._initialized || !this.physicsWorld) return null;
 
-    const RAPIER = window.RAPIER;
+    const RAPIER = this.RAPIER;
     const ray = new RAPIER.Ray(
       { x: origin.x, y: origin.y, z: origin.z },
       { x: direction.x, y: direction.y, z: direction.z }
@@ -452,15 +454,17 @@ class PhysicsSystem extends System {
       return null;
     }
 
-    const RAPIER = window.RAPIER;
+    const RAPIER = this.RAPIER;
 
     // Configuración del capsule collider
     const radius = config.radius || 0.5;
     const height = config.height || 1.8;
     const stepHeight = config.stepHeight || 0.3;
 
-    // Crear kinematic character controller
-    const controller = RAPIER.KinematicCharacterController.new(radius, height, stepHeight);
+    // Crear kinematic character controller (el ctor solo acepta offset)
+    const controller = new RAPIER.KinematicCharacterController(
+      config.offset !== undefined ? config.offset : 0.01
+    );
 
     // Configurar propiedades
     if (config.offset) {
@@ -521,9 +525,7 @@ class PhysicsSystem extends System {
         const bodyData = this.rigidBodies.get(entity);
         if (bodyData && bodyData.body) {
           bodyData.body.setTranslation(
-            transform.x,
-            transform.y,
-            transform.z,
+            { x: transform.x, y: transform.y, z: transform.z },
             true
           );
         }
@@ -575,25 +577,28 @@ class PhysicsSystem extends System {
    * Obtiene descripción para trigger
    */
   _getTriggerDescription(config) {
-    const RAPIER = window.RAPIER;
+    const RAPIER = this.RAPIER;
     const { shape, ...shapeConfig } = config;
 
     switch (shape) {
-      case 'box':
+      case 'box': {
         const size = shapeConfig.size || [1, 1, 1];
         return RAPIER.ColliderDesc.cuboid(size[0] / 2, size[1] / 2, size[2] / 2)
           .setSensor(true);
 
-      case 'sphere':
+      }
+      case 'sphere': {
         const radius = shapeConfig.radius || 0.5;
         return RAPIER.ColliderDesc.ball(radius).setSensor(true);
 
-      case 'cylinder':
+      }
+      case 'cylinder': {
         const cylRadius = shapeConfig.radius || 0.5;
         const cylHeight = shapeConfig.height || 1;
         return RAPIER.ColliderDesc.cylinder(cylHeight / 2, cylRadius)
           .setSensor(true);
 
+      }
       default:
         return RAPIER.ColliderDesc.cuboid(0.5, 0.5, 0.5).setSensor(true);
     }
@@ -681,7 +686,7 @@ class PhysicsSystem extends System {
   createJoint(entityA, entityB, jointConfig = {}) {
     if (!this._initialized) return null;
 
-    const RAPIER = window.RAPIER;
+    const RAPIER = this.RAPIER;
     const bodyDataA = this.rigidBodies.get(entityA);
     const bodyDataB = this.rigidBodies.get(entityB);
 
@@ -701,14 +706,14 @@ class PhysicsSystem extends System {
         break;
 
       case 'ball':
-        joint = RAPIER.JointData.ball(
+        joint = RAPIER.JointData.spherical(
           { x: jointConfig.anchorA?.x || 0, y: jointConfig.anchorA?.y || 0, z: jointConfig.anchorA?.z || 0 },
           { x: jointConfig.anchorB?.x || 0, y: jointConfig.anchorB?.y || 0, z: jointConfig.anchorB?.z || 0 }
         );
         break;
 
       case 'hinge':
-        joint = RAPIER.JointData.hinge(
+        joint = RAPIER.JointData.revolute(
           { x: jointConfig.anchorA?.x || 0, y: jointConfig.anchorA?.y || 0, z: jointConfig.anchorA?.z || 0 },
           { x: jointConfig.axisA?.x || 0, y: jointConfig.axisA?.y || 0, z: jointConfig.axisA?.z || 1 },
           { x: jointConfig.anchorB?.x || 0, y: jointConfig.anchorB?.y || 0, z: jointConfig.anchorB?.z || 0 },

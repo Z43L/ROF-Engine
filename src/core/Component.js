@@ -5,6 +5,20 @@
  */
 
 /**
+ * Clase base para componentes con lógica (p. ej. MeshComponent, LightComponent).
+ * Los componentes puramente de datos se crean con ComponentRegistry.create().
+ */
+class Component {
+  constructor(type = 'component') {
+    this.type = type;
+  }
+
+  toJSON() {
+    return { type: this.type };
+  }
+}
+
+/**
  * Registro de tipos de componentes
  */
 const ComponentRegistry = {
@@ -166,5 +180,5 @@ ComponentRegistry.register('camera', {
   active: data.active !== undefined ? data.active : true
 }));
 
-export { ComponentRegistry };
-export default ComponentRegistry;
+export { ComponentRegistry, Component };
+export default Component;

@@ -327,6 +327,9 @@ export class Timeline {
 
   /**
    * Crear track de forma fluida
+   * @param {any} target
+   * @param {string} property
+   * @returns {{to: (time: number, values: any, easing?: string) => Timeline, track: Track}}
    */
   createTrack(target, property) {
     const track = new Track({

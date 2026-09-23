@@ -54,3 +54,6 @@ temp/
 # Examples (keep but don't track changes)
 examples/
 !examples/.gitkeep
+
+# Test results
+test-results/

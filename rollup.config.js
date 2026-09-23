@@ -5,13 +5,35 @@
 
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
-import typescript from '@rollup/plugin-typescript';
-import { terser } from '@rollup/plugin-terser';
+import { babel } from '@rollup/plugin-babel';
+import terser from '@rollup/plugin-terser';
 import dts from 'rollup-plugin-dts';
 import peerDepsExternal from 'rollup-plugin-peer-deps-external';
 import { readFileSync } from 'fs';
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf8'));
+
+// Deps de runtime que se importan de forma dinámica y deben quedar externas
+// en el dist (npm las instala al ser dependencies/peerDependencies declaradas)
+const runtimeExternal = [
+  ...Object.keys(pkg.peerDependencies || {}),
+  'postprocessing',
+  '@dimforge/rapier3d-compat'
+];
+
+// Babel para transformar el JSX de los componentes React (runtime automático).
+// configFile/babelrc desactivados: el babel.config.js de la raíz es para
+// Metro/Expo (CJS) y no debe mezclarse con el build de rollup.
+const babelReact = () => babel({
+  babelHelpers: 'bundled',
+  extensions: ['.js', '.jsx'],
+  exclude: 'node_modules/**',
+  configFile: false,
+  babelrc: false,
+  presets: [
+    ['@babel/preset-react', { runtime: 'automatic' }]
+  ]
+});
 
 export default [
   // Main bundle - ESM y CJS
@@ -31,18 +53,14 @@ export default [
         banner: '/* ROF-Engine v' + pkg.version + ' */'
       }
     ],
-    external: [...Object.keys(pkg.peerDependencies || {})],
+    external: [...runtimeExternal, 'react/jsx-runtime'],
     plugins: [
       peerDepsExternal(),
+      babelReact(),
       resolve({
         extensions: ['.js', '.jsx', '.ts', '.tsx']
       }),
       commonjs(),
-      typescript({
-        tsconfig: './tsconfig.json',
-        declaration: false,
-        declarationMap: false
-      }),
       terser({
         compress: {
           drop_console: process.env.NODE_ENV === 'production',
@@ -71,20 +89,18 @@ export default [
       sourcemap: true
     },
     external: [
-      ...Object.keys(pkg.peerDependencies || {}),
+      ...runtimeExternal,
       'react',
       'react-dom',
       'react/jsx-runtime'
     ],
     plugins: [
+      peerDepsExternal(),
+      babelReact(),
       resolve({
         extensions: ['.js', '.jsx', '.ts', '.tsx']
       }),
       commonjs(),
-      typescript({
-        tsconfig: './tsconfig.json',
-        declaration: false
-      }),
       terser()
     ]
   },
@@ -98,18 +114,16 @@ export default [
       sourcemap: true
     },
     external: [
-      ...Object.keys(pkg.peerDependencies || {}),
+      ...runtimeExternal,
       'three'
     ],
     plugins: [
+      peerDepsExternal(),
+      babelReact(),
       resolve({
         extensions: ['.js', '.jsx']
       }),
       commonjs(),
-      typescript({
-        tsconfig: './tsconfig.json',
-        declaration: false
-      }),
       terser()
     ]
   },
@@ -123,18 +137,17 @@ export default [
       sourcemap: true
     },
     external: [
-      ...Object.keys(pkg.peerDependencies || {}),
-      'react'
+      ...runtimeExternal,
+      'react',
+      'react/jsx-runtime'
     ],
     plugins: [
+      peerDepsExternal(),
+      babelReact(),
       resolve({
         extensions: ['.js', '.jsx']
       }),
       commonjs(),
-      typescript({
-        tsconfig: './tsconfig.json',
-        declaration: false
-      }),
       terser()
     ]
   },
@@ -148,23 +161,22 @@ export default [
       sourcemap: true
     },
     external: [
-      ...Object.keys(pkg.peerDependencies || {}),
-      'three'
+      ...runtimeExternal,
+      'three',
+      'react/jsx-runtime'
     ],
     plugins: [
+      peerDepsExternal(),
+      babelReact(),
       resolve({
         extensions: ['.js', '.jsx']
       }),
       commonjs(),
-      typescript({
-        tsconfig: './tsconfig.json',
-        declaration: false
-      }),
       terser()
     ]
   },
 
-  // Type definitions
+  // Type definitions (generadas desde el JS con JSDoc vía allowJs)
   {
     input: 'src/index.js',
     output: {
@@ -173,9 +185,10 @@ export default [
     },
     plugins: [
       dts({
-        respectExternal: true
+        respectExternal: true,
+        tsconfig: './tsconfig.dts.json'
       })
     ],
-    external: [...Object.keys(pkg.peerDependencies || {})]
+    external: runtimeExternal
   }
 ];

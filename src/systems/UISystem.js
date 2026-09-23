@@ -419,8 +419,11 @@ class UISystem extends System {
     }
 
     // Actualizar el componente transform si existe
+    // (defensivo: uiState puede venir de otra fuente sin estos campos)
     const transform = entity.getComponent('transform');
     if (transform) {
+      uiState.scale = uiState.scale || { x: 1, y: 1 };
+      uiState.position = uiState.position || { x: 0, y: 0 };
       transform.opacity = uiState.opacity;
       transform.scaleX = uiState.scale.x;
       transform.scaleY = uiState.scale.y;
@@ -450,7 +453,7 @@ class UISystem extends System {
    * Animar un elemento
    */
   _animateElement(element, animationType) {
-    const animation = element.animations[animationType];
+    const animation = element.animations?.[animationType];
     if (!animation) return;
 
     // Crear animación

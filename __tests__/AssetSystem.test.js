@@ -81,7 +81,10 @@ describe('AssetSystem', () => {
 
       expect(loadedAsset).toBeDefined();
       expect(loadedAsset.status).toBe(AssetStatus.LOADED);
-      expect(AssetLoader.loadTexture).toHaveBeenCalledWith('/bg.jpg', {});
+      expect(AssetLoader.loadTexture).toHaveBeenCalledWith(
+        '/bg.jpg',
+        expect.objectContaining({ onProgress: expect.any(Function) })
+      );
     });
 
     test('debería lanzar error si intenta cargar un asset no registrado', async () => {
@@ -227,6 +230,9 @@ describe('AssetSystem', () => {
       assetSystem.registerAsset('old', AssetType.TEXTURE, '/old.png');
       await assetSystem.loadAsset('old');
 
+      // Liberar la referencia: auto-unload solo actúa sobre assets sin referencias
+      assetSystem.assets.get('old').refCount = 0;
+
       // Simular que pasaron más de 30 segundos
       jest.spyOn(Date, 'now').mockReturnValue(now + 35000);
 
@@ -269,17 +275,19 @@ describe('AssetSystem', () => {
       assetSystem.loadAsset('texture');
     });
 
-    test('debería emitir eventos de error', (done) => {
+    test('debería emitir eventos de error', async () => {
       AssetLoader.loadTexture = jest.fn().mockRejectedValue(new Error('Network error'));
 
-      assetSystem.on('assetLoadError', ({ id, error }) => {
-        expect(id).toBe('texture');
-        expect(error).toBeInstanceOf(Error);
-        done();
-      });
+      const onError = jest.fn();
+      assetSystem.on('assetLoadError', onError);
 
       assetSystem.registerAsset('texture', AssetType.TEXTURE, '/tex.png');
-      assetSystem.loadAsset('texture');
+      await expect(assetSystem.loadAsset('texture')).rejects.toThrow('Network error');
+
+      expect(onError).toHaveBeenCalledTimes(1);
+      const [{ id, error }] = onError.mock.calls[0];
+      expect(id).toBe('texture');
+      expect(error).toBeInstanceOf(Error);
     });
   });
 });

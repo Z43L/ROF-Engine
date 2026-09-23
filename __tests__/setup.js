@@ -122,7 +122,7 @@ const THREE = {
 global.THREE = THREE;
 global.window.THREE = THREE;
 
-// Mock de React Three Fiber
+// Mock de React Three Fiber (virtual: el paquete es peer opcional y puede no estar instalado)
 jest.mock('@react-three/fiber', () => ({
   Canvas: ({ children }) => children,
   useFrame: jest.fn(),
@@ -131,11 +131,11 @@ jest.mock('@react-three/fiber', () => ({
     camera: new THREE.PerspectiveCamera(),
     gl: new THREE.WebGLRenderer()
   }))
-}));
+}), { virtual: true });
 
-// Mock de Expo modules
-jest.mock('expo-gl', () => ({}));
-jest.mock('expo-three', () => ({}));
+// Mock de Expo modules (virtual: no instalados en este entorno)
+jest.mock('expo-gl', () => ({}), { virtual: true });
+jest.mock('expo-three', () => ({}), { virtual: true });
 
 // Silenciar console.warn y console.error en tests (opcional)
 // console.warn = jest.fn();

@@ -30,9 +30,7 @@ class RenderSystem extends System {
       },
       toneMapping: THREE.ACESFilmicToneMapping,
       toneMappingExposure: 1,
-      outputEncoding: THREE.sRGBEncoding,
-      physicallyCorrectLights: true,
-      useLegacyLights: false
+      outputColorSpace: THREE.SRGBColorSpace
     };
 
     // Sistemas relacionados
@@ -65,6 +63,9 @@ class RenderSystem extends System {
       enabled: false,
       effects: []
     };
+    // Módulo 'postprocessing' (carga perezosa vía import dinámico, ESM-safe)
+    this._pp = null;
+    this._ppLoading = false;
 
     // Optimización
     this.culling = {
@@ -149,11 +150,19 @@ class RenderSystem extends System {
     this.renderer.toneMapping = this.config.toneMapping;
     this.renderer.toneMappingExposure = this.config.toneMappingExposure;
 
-    // Configurar output encoding
-    this.renderer.outputEncoding = this.config.outputEncoding;
+    // Configurar espacio de color (three r152+: outputColorSpace)
+    if ('outputColorSpace' in this.renderer) {
+      this.renderer.outputColorSpace = this.config.outputColorSpace || THREE.SRGBColorSpace;
+    } else if ('outputEncoding' in this.renderer) {
+      // Compatibilidad con three < r152
+      this.renderer.outputEncoding = this.config.outputColorSpace;
+    }
 
-    // Configurar luces
-    this.renderer.physicallyCorrectLights = this.config.physicallyCorrectLights;
+    // Luces físicas: comportamiento por defecto desde three r155
+    // (useLegacyLights se eliminó en r165)
+    if ('useLegacyLights' in this.renderer) {
+      this.renderer.useLegacyLights = false;
+    }
 
     console.log('✅ Renderer configured');
   }
@@ -218,6 +227,26 @@ class RenderSystem extends System {
   }
 
   /**
+   * Carga perezosa del módulo 'postprocessing' mediante import dinámico
+   * (funciona en ESM puro, bundlers y React Native/Metro).
+   * Se calienta al configurar efectos para que esté listo en el primer frame.
+   */
+  _warmPostProcessing() {
+    if (this._pp || this._ppLoading) return;
+    this._ppLoading = true;
+    import('postprocessing').then(
+      (module) => {
+        this._pp = module;
+        this._ppLoading = false;
+      },
+      (error) => {
+        console.warn('⚠️ postprocessing no disponible:', error.message);
+        this._ppLoading = false;
+      }
+    );
+  }
+
+  /**
    * Renderiza con post-processing
    */
   _renderWithPostProcessing() {
@@ -227,12 +256,16 @@ class RenderSystem extends System {
       return;
     }
 
+    // Si el módulo aún se está cargando (o falló), renderizar normal este frame
+    if (!this._pp) {
+      this.renderer.render(this.scene, this.camera);
+      return;
+    }
+
     try {
       // Crear EffectComposer si no existe
       if (!this.effectComposer) {
-        const { EffectComposer } = require('postprocessing');
-        const { RenderPass } = require('postprocessing');
-        const { ShaderPass } = require('postprocessing');
+        const { EffectComposer, RenderPass } = this._pp;
 
         this.effectComposer = new EffectComposer(this.renderer);
         this.renderPass = new RenderPass(this.scene, this.camera);
@@ -296,16 +329,18 @@ class RenderSystem extends System {
 
     if (!enabled) return null;
 
+    // Módulo postprocessing (cargado de forma perezosa vía _warmPostProcessing)
+    const PP = this._pp;
+    if (!PP) return null;
+
     try {
-      const { EffectPass, KernelSize } = require('postprocessing');
-      const { BlendFunction } = require('postprocessing');
+      const { EffectPass, KernelSize, BlendFunction } = PP;
 
       switch (type) {
         case 'bloom':
-          const { Bloom } = require('postprocessing');
           return new EffectPass(
             this.camera,
-            new Bloom({
+            new PP.BloomEffect({
               intensity: intensity,
               luminanceThreshold: options.luminanceThreshold || 0.85,
               luminanceSmoothing: options.luminanceSmoothing || 0.2,
@@ -315,17 +350,15 @@ class RenderSystem extends System {
           );
 
         case 'smaa':
-          const { SMAAEffect } = require('postprocessing');
           return new EffectPass(
             this.camera,
-            new SMAAEffect()
+            new PP.SMAAEffect()
           );
 
         case 'ssao':
-          const { SSAOEffect } = require('postprocessing');
           return new EffectPass(
             this.camera,
-            new SSAOEffect({
+            new PP.SSAOEffect(this.camera, {
               samples: options.samples || 16,
               rings: options.rings || 7,
               radius: options.radius || 0.1,
@@ -335,10 +368,9 @@ class RenderSystem extends System {
           );
 
         case 'vignette':
-          const { Vignette } = require('postprocessing');
           return new EffectPass(
             this.camera,
-            new Vignette({
+            new PP.VignetteEffect({
               offset: options.offset || 1.0,
               darkness: options.darkness || 1.0,
               blendFunction: options.blendFunction || BlendFunction.MULTIPLY
@@ -346,54 +378,49 @@ class RenderSystem extends System {
           );
 
         case 'chromatic':
-          const { ChromaticAberrationEffect } = require('postprocessing');
           return new EffectPass(
             this.camera,
-            new ChromaticAberrationEffect({
+            new PP.ChromaticAberrationEffect({
               offset: options.offset || new THREE.Vector2(0.0005, 0.001)
             })
           );
 
         case 'noise':
-          const { NoiseEffect } = require('postprocessing');
           return new EffectPass(
             this.camera,
-            new NoiseEffect({
+            new PP.NoiseEffect({
               premultiply: options.premultiply || true,
               blendFunction: options.blendFunction || BlendFunction.ADD
             })
           );
 
         case 'sepia':
-          const { SepiaEffect } = require('postprocessing');
           return new EffectPass(
             this.camera,
-            new SepiaEffect({
+            new PP.SepiaEffect({
               intensity: intensity || 1.0,
               blendFunction: options.blendFunction || BlendFunction.MULTIPLY
             })
           );
 
         case 'grayscale':
-          const { GrayscaleEffect } = require('postprocessing');
+          // postprocessing v6 no trae GrayscaleEffect: saturación -1 = gris
           return new EffectPass(
             this.camera,
-            new GrayscaleEffect(intensity || 1.0)
+            new PP.HueSaturationEffect({ saturation: -1 })
           );
 
         case 'gamma':
-          const { GammaCorrectionEffect } = require('postprocessing');
           return new EffectPass(
             this.camera,
-            new GammaCorrectionEffect(options.gamma || 2.2)
+            new PP.GammaCorrectionEffect({ gamma: options.gamma || 2.2 })
           );
 
         case 'tone_mapping':
-          const { ToneMappingEffect } = require('postprocessing');
           return new EffectPass(
             this.camera,
-            new ToneMappingEffect({
-              mode: options.mode || 1, // ACESFilmic
+            new PP.ToneMappingEffect({
+              mode: options.mode ?? PP.ToneMappingMode.ACES_FILMIC,
               exposure: options.exposure || 1.0,
               whitePoint: options.whitePoint || 4.0,
               middleGrey: options.middleGrey || 0.6,
@@ -404,30 +431,21 @@ class RenderSystem extends System {
             })
           );
 
-        case 'depth_of_field':
-          const { DepthOfFieldEffect } = require('postprocessing');
+        case 'depth_of_field': {
+          const width = options.width || (typeof window !== 'undefined' ? window.innerWidth : 1280);
+          const height = options.height || (typeof window !== 'undefined' ? window.innerHeight : 720);
           return new EffectPass(
             this.camera,
-            new DepthOfFieldEffect(this.camera, {
+            new PP.DepthOfFieldEffect(this.camera, {
               focusDistance: options.focusDistance || 0.02,
               focalLength: options.focalLength || 0.050,
               bokehScale: options.bokehScale || 1.0,
               bokehRotation: options.bokehRotation || Math.PI / 2,
-              width: options.width || window.innerWidth,
-              height: options.height || window.innerHeight
+              width,
+              height
             })
           );
-
-        case 'motion_blur':
-          const { MotionBlurEffect } = require('postprocessing');
-          return new EffectPass(
-            this.camera,
-            new MotionBlurEffect({
-              intensity: options.intensity || 1.0,
-              samples: options.samples || 64,
-              jitter: options.jitter || 0.1
-            })
-          );
+        }
 
         default:
           console.warn(`Unknown post-processing effect: ${type}`);
@@ -687,6 +705,11 @@ class RenderSystem extends System {
     this.postProcessing.enabled = enabled;
     this.postProcessing.effects = effects;
 
+    // Calentar la carga del módulo para que esté listo al renderizar
+    if (enabled) {
+      this._warmPostProcessing();
+    }
+
     // Forzar re-render si se está renderizando
     if (enabled) {
       this.needsRender = true;
@@ -702,6 +725,7 @@ class RenderSystem extends System {
     }
     this.postProcessing.effects.push(effectConfig);
     this.postProcessing.enabled = true;
+    this._warmPostProcessing();
     this.needsRender = true;
   }
 
@@ -763,13 +787,11 @@ class RenderSystem extends System {
 
   /**
    * Habilita Motion Blur
+   * NOTA: postprocessing v6 eliminó MotionBlurEffect; este método queda
+   * como no-op documentado hasta que se reimplemente con otra técnica.
    */
   enableMotionBlur(intensity = 1) {
-    this.addPostProcessingEffect({
-      type: 'motion_blur',
-      enabled: true,
-      intensity
-    });
+    console.warn('⚠️ Motion blur no disponible en postprocessing v6 (efecto eliminado por la librería)');
   }
 
   /**

@@ -163,7 +163,7 @@ class CameraSystem extends System {
           );
           break;
 
-        case 'orthographic':
+        case 'orthographic': {
           const { left, right, top, bottom } = cameraComponent;
           camera = new THREE.OrthographicCamera(
             left || -1,
@@ -175,6 +175,7 @@ class CameraSystem extends System {
           );
           break;
 
+        }
         case 'cubemap':
           camera = new THREE.CubeCamera(
             cameraComponent.near || 0.1,

@@ -115,7 +115,9 @@ describe('UISystem', () => {
   describe('Animaciones', () => {
     test('debería aplicar valores de animación', () => {
       const entity = mockWorld.createEntity();
-      entity.getComponent.mockReturnValue({});
+      entity.getComponent.mockImplementation((type) =>
+        type === 'transform' ? {} : undefined
+      );
 
       uiSystem._applyAnimationValues(entity, 'opacity', 0.5, 0, 1);
 
@@ -130,7 +132,9 @@ describe('UISystem', () => {
 
     test('debería interpolar posiciones', () => {
       const entity = mockWorld.createEntity();
-      entity.getComponent.mockReturnValue({});
+      entity.getComponent.mockImplementation((type) =>
+        type === 'transform' ? {} : undefined
+      );
 
       const from = { x: 0, y: 0 };
       const to = { x: 100, y: 100 };
@@ -159,7 +163,8 @@ describe('UISystem', () => {
         entity: mockWorld.createEntity(),
         interactive: true,
         visible: true,
-        enabled: true
+        enabled: true,
+        focusable: true
       };
 
       uiSystem.uiElements.set('button1', mockElement);

@@ -82,30 +82,36 @@ export default function Mesh({
  */
 function createGeometry(type, params) {
   switch (type) {
-    case 'box':
+    case 'box': {
       const { width = 1, height = 1, depth = 1 } = params;
       return <boxGeometry args={[width, height, depth]} />;
 
-    case 'sphere':
+    }
+    case 'sphere': {
       const { radius = 0.5, widthSegments = 32, heightSegments = 16 } = params;
       return <sphereGeometry args={[radius, widthSegments, heightSegments]} />;
 
-    case 'plane':
+    }
+    case 'plane': {
       const { width = 1, height = 1, widthSegments = 1, heightSegments = 1 } = params;
       return <planeGeometry args={[width, height, widthSegments, heightSegments]} />;
 
-    case 'cylinder':
+    }
+    case 'cylinder': {
       const { radiusTop = 0.5, radiusBottom = 0.5, height = 1, radialSegments = 32 } = params;
       return <cylinderGeometry args={[radiusTop, radiusBottom, height, radialSegments]} />;
 
-    case 'cone':
+    }
+    case 'cone': {
       const { radius = 0.5, height = 1, radialSegments = 32 } = params;
       return <coneGeometry args={[radius, height, radialSegments]} />;
 
-    case 'torus':
+    }
+    case 'torus': {
       const { radius = 1, tube = 0.4, radialSegments = 16, tubularSegments = 100 } = params;
       return <torusGeometry args={[radius, tube, radialSegments, tubularSegments]} />;
 
+    }
     default:
       return <boxGeometry args={[1, 1, 1]} />;
   }
@@ -116,11 +122,12 @@ function createGeometry(type, params) {
  */
 function createMaterial(type, params) {
   switch (type) {
-    case 'basic':
+    case 'basic': {
       const { color = 0xffffff, wireframe = false } = params;
       return <meshBasicMaterial color={color} wireframe={wireframe} />;
 
-    case 'lambert':
+    }
+    case 'lambert': {
       const {
         color = 0xffffff,
         emissive = 0x000000,
@@ -136,7 +143,8 @@ function createMaterial(type, params) {
         />
       );
 
-    case 'phong':
+    }
+    case 'phong': {
       const {
         color = 0xffffff,
         emissive = 0x000000,
@@ -154,7 +162,8 @@ function createMaterial(type, params) {
         />
       );
 
-    case 'standard':
+    }
+    case 'standard': {
       const {
         color = 0xffffff,
         metalness = 0,
@@ -174,7 +183,8 @@ function createMaterial(type, params) {
         />
       );
 
-    case 'physical':
+    }
+    case 'physical': {
       const {
         color = 0xffffff,
         metalness = 0,
@@ -198,14 +208,17 @@ function createMaterial(type, params) {
         />
       );
 
-    case 'toon':
+    }
+    case 'toon': {
       const { color = 0xffffff, gradientMap = null, wireframe = false } = params;
       return <meshToonMaterial color={color} gradientMap={gradientMap} wireframe={wireframe} />;
 
-    case 'matcap':
+    }
+    case 'matcap': {
       const { matcap = null, wireframe = false } = params;
       return <meshMatcapMaterial matcap={matcap} wireframe={wireframe} />;
 
+    }
     default:
       return <meshStandardMaterial color={0xffffff} />;
   }

@@ -3,8 +3,7 @@
  * Verifica que el sistema de input funciona correctamente
  */
 
-import InputSystem from '../src/systems/InputSystem.js';
-import InputState from '../src/systems/InputSystem.js';
+import InputSystem, { InputState } from '../src/systems/InputSystem.js';
 
 describe('InputSystem', () => {
   let inputSystem;

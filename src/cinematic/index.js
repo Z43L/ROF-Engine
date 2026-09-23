@@ -77,6 +77,7 @@ export {
  */
 
 import { getGlobalCinematicManager } from './managers/CinematicManager';
+import { getGlobalEventBus } from './core/EventBus';
 
 /**
  * Crear y reproducir una cinemática simple

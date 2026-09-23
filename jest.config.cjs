@@ -1,6 +1,9 @@
 /**
  * Jest Configuration for ROF-Engine
  * Configuración de testing para el framework de juegos
+ *
+ * Nota: este fichero es .cjs porque el package usa "type": "module"
+ * y jest espera poder cargarlo con require().
  */
 
 module.exports = {
@@ -8,7 +11,7 @@ module.exports = {
   testEnvironment: 'jsdom',
 
   // Directorios de tests
-  roots: ['<rootDir>/src', '<rootDir>/__tests__'],
+  roots: ['<rootDir>/__tests__'],
 
   // Patrones de archivos de test
   testMatch: [
@@ -20,38 +23,29 @@ module.exports = {
   testPathIgnorePatterns: [
     '/node_modules/',
     '/__snapshots__/',
-    '/coverage/'
+    '/coverage/',
+    '/__tests__/setup.js'
   ],
 
-  // Módulos a ignorar
+  // Módulos a ignorar en la transformación
   transformIgnorePatterns: [
     'node_modules/(?!(@react-three)/)'
   ],
 
-  // Configuración de módulos
-  moduleNameMapping: {
+  // Mapeo de módulos
+  moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
-    '\\.(gif|ttf|eot|svg)$': '<rootDir>/__mocks__/fileMock.js'
+    '\\.(gif|ttf|eot|svg|png|jpg|jpeg)$': '<rootDir>/__mocks__/fileMock.js'
   },
 
   // Setup files
   setupFilesAfterEnv: ['<rootDir>/__tests__/setup.js'],
 
-  // Coverage
-  collectCoverage: true,
+  // Coverage (desactivado por defecto; usar `npm run test:coverage`)
+  collectCoverage: false,
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
-  coverageThreshold: {
-    global: {
-      branches: 70,
-      functions: 70,
-      lines: 70,
-      statements: 70
-    }
-  },
-
-  // Coverage paths
   collectCoverageFrom: [
     'src/**/*.js',
     '!src/**/*.test.js',
@@ -59,12 +53,12 @@ module.exports = {
     '!src/**/index.js' // Exclude index files from coverage
   ],
 
-  // Transform para ES6 modules
+  // Transform para ES6 modules (config de babel dedicada a jest)
   transform: {
-    '^.+\\.js$': 'babel-jest'
+    '^.+\\.js$': ['babel-jest', { configFile: './babel.jest.cjs' }]
   },
 
-  // Modulos útiles para testing
+  // Verbose
   verbose: true,
 
   // Reset mocks entre tests

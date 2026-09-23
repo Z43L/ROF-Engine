@@ -51,13 +51,18 @@
     "prepack": "npm run build"
   },
   "dependencies": {
-    "three": "^0.160.0",
-    "zustand": "^5.0.3"
+    "@dimforge/rapier3d-compat": "^0.20.0",
+    "postprocessing": "^6.39.5",
+    "three": ">=0.186.0"
   },
   "peerDependencies": {
+    "@react-three/fiber": ">=8.0.0",
+    "@react-three/drei": ">=9.0.0",
+    "expo-av": ">=13.0.0",
+    "expo-haptics": ">=13.0.0",
     "react": ">=18.0.0",
     "react-native": ">=0.70.0",
-    "three": ">=0.160.0"
+    "three": ">=0.186.0"
   },
   "peerDependenciesMeta": {
     "react": {
@@ -68,23 +73,38 @@
     },
     "three": {
       "optional": true
+    },
+    "@react-three/fiber": {
+      "optional": true
+    },
+    "@react-three/drei": {
+      "optional": true
+    },
+    "expo-av": {
+      "optional": true
+    },
+    "expo-haptics": {
+      "optional": true
     }
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.26.0",
+    "@babel/preset-react": "^7.29.7",
+    "@rollup/plugin-babel": "^7.1.0",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.3",
     "@rollup/plugin-typescript": "^11.1.5",
     "@types/react": "^18.2.45",
     "@types/react-native": "^0.72.7",
-    "@types/three": "^0.166.0",
+    "@types/three": "^0.186.0",
     "@typescript-eslint/eslint-plugin": "^6.15.0",
     "@typescript-eslint/parser": "^6.15.0",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
-    "postprocessing": "^6.33.3",
+    "jest-junit": "^17.0.0",
     "prettier": "^3.1.1",
     "rollup": "^4.9.1",
     "rollup-plugin-dts": "^6.1.0",
@@ -107,10 +127,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tu-usuario/reinado-olvidado.git"
+    "url": "https://github.com/Z43L/ROF-Engine.git"
   },
   "bugs": {
-    "url": "https://github.com/tu-usuario/reinado-olvidado/issues"
+    "url": "https://github.com/Z43L/ROF-Engine/issues"
   },
-  "homepage": "https://github.com/tu-usuario/reinado-olvidado#readme"
+  "homepage": "https://github.com/Z43L/ROF-Engine#readme"
 }

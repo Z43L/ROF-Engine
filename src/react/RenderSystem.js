@@ -6,7 +6,7 @@
 import React, { useEffect, useRef, useMemo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { RenderSystem } from '../../systems/RenderSystem.js';
+import RenderSystem from '../systems/RenderSystem.js';
 
 /**
  * Hook para usar el RenderSystem

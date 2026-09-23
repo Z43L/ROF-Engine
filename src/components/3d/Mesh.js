@@ -48,22 +48,25 @@ export class MeshComponent extends Component {
    */
   createGeometry() {
     switch (this.geometryType) {
-      case 'box':
+      case 'box': {
         const { width = 1, height = 1, depth = 1 } = this.geometryParams;
         this.geometryObject = new THREE.BoxGeometry(width, height, depth);
         break;
 
-      case 'sphere':
+      }
+      case 'sphere': {
         const { radius = 0.5, widthSegments = 32, heightSegments = 16 } = this.geometryParams;
         this.geometryObject = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
         break;
 
-      case 'plane':
+      }
+      case 'plane': {
         const { width = 1, height = 1, widthSegments = 1, heightSegments = 1 } = this.geometryParams;
         this.geometryObject = new THREE.PlaneGeometry(width, height, widthSegments, heightSegments);
         break;
 
-      case 'cylinder':
+      }
+      case 'cylinder': {
         const {
           radiusTop = 0.5,
           radiusBottom = 0.5,
@@ -78,16 +81,19 @@ export class MeshComponent extends Component {
         );
         break;
 
-      case 'cone':
+      }
+      case 'cone': {
         const { radius = 0.5, height = 1, radialSegments = 32 } = this.geometryParams;
         this.geometryObject = new THREE.ConeGeometry(radius, height, radialSegments);
         break;
 
-      case 'torus':
+      }
+      case 'torus': {
         const { radius = 1, tube = 0.4, radialSegments = 16, tubularSegments = 100 } = this.geometryParams;
         this.geometryObject = new THREE.TorusGeometry(radius, tube, radialSegments, tubularSegments);
         break;
 
+      }
       case 'custom':
         if (this.geometry) {
           this.geometryObject = this.geometry;
@@ -106,12 +112,13 @@ export class MeshComponent extends Component {
    */
   createMaterial() {
     switch (this.materialType) {
-      case 'basic':
+      case 'basic': {
         const { color = 0xffffff, wireframe = false } = this.materialParams;
         this.materialObject = new THREE.MeshBasicMaterial({ color, wireframe });
         break;
 
-      case 'lambert':
+      }
+      case 'lambert': {
         const {
           color = 0xffffff,
           emissive = 0x000000,
@@ -126,7 +133,8 @@ export class MeshComponent extends Component {
         });
         break;
 
-      case 'phong':
+      }
+      case 'phong': {
         const {
           color = 0xffffff,
           emissive = 0x000000,
@@ -143,7 +151,8 @@ export class MeshComponent extends Component {
         });
         break;
 
-      case 'standard':
+      }
+      case 'standard': {
         const {
           color = 0xffffff,
           metalness = 0,
@@ -162,7 +171,8 @@ export class MeshComponent extends Component {
         });
         break;
 
-      case 'physical':
+      }
+      case 'physical': {
         const {
           color = 0xffffff,
           metalness = 0,
@@ -185,7 +195,8 @@ export class MeshComponent extends Component {
         });
         break;
 
-      case 'toon':
+      }
+      case 'toon': {
         const { color = 0xffffff, gradientMap = null, wireframe = false } = this.materialParams;
         this.materialObject = new THREE.MeshToonMaterial({
           color,
@@ -194,7 +205,8 @@ export class MeshComponent extends Component {
         });
         break;
 
-      case 'matcap':
+      }
+      case 'matcap': {
         const { matcap = null, wireframe = false } = this.materialParams;
         this.materialObject = new THREE.MeshMatcapMaterial({
           matcap,
@@ -202,6 +214,7 @@ export class MeshComponent extends Component {
         });
         break;
 
+      }
       case 'custom':
         if (this.material) {
           this.materialObject = this.material;
